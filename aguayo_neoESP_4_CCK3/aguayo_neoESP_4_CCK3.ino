@@ -16,13 +16,24 @@
 
 #define NUM_STRIPS 8
 #define NUM_LEDS_PER_STRIP 300
+const byte analogPort = A0;
 
 CRGB leds[NUM_STRIPS][NUM_LEDS_PER_STRIP];
+CRGB lookupTable[20];
+CRGB temp[NUM_STRIPS];
 
 unsigned long maxLong = ULONG_MAX;
 unsigned long t;
-CRGB lookupTable[20];
+
 int maxColors = 20;
+int colorIndex = 0;
+long period = 30E3;
+long periodFormula = 25E3;
+long lastChange = 0;
+long lastChangeFormula = 0;
+int color = 0;
+int formula = 0;
+
 
 void generateLookupTableRandom() {
   for (int i = 0; i < 20; i++) {
@@ -109,13 +120,18 @@ CRGB pickRandomColor() {
 }
 
 void shuffleLookupTable() {
+  Serial.println("shuffleLookupTable");
   std::random_shuffle(std::begin(lookupTable), std::end(lookupTable));
 }
 
 
 // For mirroring strips, all the "special" stuff happens just in setup.  We
 // just addLeds multiple times, once for each strip
+
+// WORKING ONLY in ESP32
 void setup() {
+  Serial.begin(115200);
+
   FastLED.addLeds<NEOPIXEL, 19>(leds[0], NUM_LEDS_PER_STRIP);
   FastLED.addLeds<NEOPIXEL, 21>(leds[1], NUM_LEDS_PER_STRIP);
   FastLED.addLeds<NEOPIXEL, 18>(leds[2], NUM_LEDS_PER_STRIP);
@@ -125,25 +141,16 @@ void setup() {
   FastLED.addLeds<NEOPIXEL, 17>(leds[6], NUM_LEDS_PER_STRIP);
   FastLED.addLeds<NEOPIXEL, 16>(leds[7], NUM_LEDS_PER_STRIP);
 
-  // FastLED.addLeds<NEOPIXEL, D0>(leds[0], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, D1>(leds[1], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, D2>(leds[2], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, D3>(leds[3], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, D4>(leds[4], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, D5>(leds[5], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, D6>(leds[5], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, D7>(leds[5], NUM_LEDS_PER_STRIP);
-
   generateLookupTableGPT();
-  Serial.begin(115200);
   FastLED.setBrightness(127);
   randomSeed(analogRead(A0)+analogRead(A0)+analogRead(A0)+analogRead(A0));
    t = random(maxLong);  // Global variable for bytebeat routine
    shuffleLookupTable();
 }
+uint8_t value;
 
-uint8_t bytebeatRoutine(int type, int t) {  // uint8_t* buffer,
-  uint8_t value;
+uint8_t bytebeatRoutine(int type, unsigned long t) {  // uint8_t* buffer,
+  
   switch (type) {
     case 0:
       value = t * (((t >> 12) | (t >> 8)) & (63 & (t >> 4)));
@@ -179,28 +186,14 @@ uint8_t bytebeatRoutine(int type, int t) {  // uint8_t* buffer,
   }
 
   t++;
+  Serial.println(value, BIN);
   return value;
 }
 
-int colorIndex = 0;
-CRGB temp[NUM_STRIPS];
-
-long period = 30E3;
-long periodFormula = 25E3;
-long lastChange = 0;
-long lastChangeFormula = 0;
-
-int color = 0;
-
-int formula = 0;
-int counter = 0;
 
 void loop() {
-  counter++;
-  counter = counter % 8;
 
   if (millis() > lastChange + period) {
-
     lastChange = millis();
     shuffleLookupTable();
   }
@@ -211,24 +204,18 @@ void loop() {
   }
 
   uint8_t bb = bytebeatRoutine(formula, t);
-  
+  Serial.println(bb, BIN);
   if (random(100) < 4) {
     colorIndex++;
   }
 
-  // for (int x = 0; x < NUM_STRIPS; x++) {
-  //   if (bb >> x & 1) {
-  //     temp[x] = pickColor(colorIndex + x);
-  //   } else {
-  //     temp[x] = CRGB(0, 0, 0);
-  //   }
-  // }
-
   for (int x = 0; x < NUM_STRIPS; x++) {
-    temp[x] = CRGB(0,0,0);    
-    if(!counter) temp[x] = CRGB(127, 127, 127);    
+    if (bb >> x & 1) {
+      temp[x] = pickColor(colorIndex + x);
+    } else {
+      temp[x] = CRGB(0, 0, 0);
+    }
   }
-
   pushValueToFifo(temp);
   FastLED.show();
   t++;

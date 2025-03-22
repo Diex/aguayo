@@ -115,24 +115,25 @@ void shuffleLookupTable() {
 
 // For mirroring strips, all the "special" stuff happens just in setup.  We
 // just addLeds multiple times, once for each strip
-void setup() {
-  FastLED.addLeds<NEOPIXEL, 19>(leds[0], NUM_LEDS_PER_STRIP);
-  FastLED.addLeds<NEOPIXEL, 21>(leds[1], NUM_LEDS_PER_STRIP);
-  FastLED.addLeds<NEOPIXEL, 18>(leds[2], NUM_LEDS_PER_STRIP);
-  FastLED.addLeds<NEOPIXEL, 0>(leds[3], NUM_LEDS_PER_STRIP);
-  FastLED.addLeds<NEOPIXEL, 5>(leds[4], NUM_LEDS_PER_STRIP);
-  FastLED.addLeds<NEOPIXEL, 4>(leds[5], NUM_LEDS_PER_STRIP);
-  FastLED.addLeds<NEOPIXEL, 17>(leds[6], NUM_LEDS_PER_STRIP);
-  FastLED.addLeds<NEOPIXEL, 16>(leds[7], NUM_LEDS_PER_STRIP);
 
-  // FastLED.addLeds<NEOPIXEL, D0>(leds[0], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, D1>(leds[1], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, D2>(leds[2], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, D3>(leds[3], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, D4>(leds[4], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, D5>(leds[5], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, D6>(leds[5], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, D7>(leds[5], NUM_LEDS_PER_STRIP);
+void setup() {
+  // FastLED.addLeds<NEOPIXEL, 19>(leds[0], NUM_LEDS_PER_STRIP);
+  // FastLED.addLeds<NEOPIXEL, 21>(leds[1], NUM_LEDS_PER_STRIP);
+  // FastLED.addLeds<NEOPIXEL, 18>(leds[2], NUM_LEDS_PER_STRIP);
+  // FastLED.addLeds<NEOPIXEL, 0>(leds[3], NUM_LEDS_PER_STRIP);
+  // FastLED.addLeds<NEOPIXEL, 5>(leds[4], NUM_LEDS_PER_STRIP);
+  // FastLED.addLeds<NEOPIXEL, 4>(leds[5], NUM_LEDS_PER_STRIP);
+  // FastLED.addLeds<NEOPIXEL, 17>(leds[6], NUM_LEDS_PER_STRIP);
+  // FastLED.addLeds<NEOPIXEL, 16>(leds[7], NUM_LEDS_PER_STRIP);
+
+  FastLED.addLeds<NEOPIXEL, D0>(leds[0], NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, D1>(leds[1], NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, D2>(leds[2], NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, D3>(leds[3], NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, D4>(leds[4], NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, D5>(leds[5], NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, D6>(leds[5], NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, D7>(leds[5], NUM_LEDS_PER_STRIP);
 
   generateLookupTableGPT();
   Serial.begin(115200);
@@ -193,16 +194,25 @@ long lastChangeFormula = 0;
 int color = 0;
 
 int formula = 0;
-int counter = 0;
-
 void loop() {
-  counter++;
-  counter = counter % 8;
 
   if (millis() > lastChange + period) {
 
     lastChange = millis();
     shuffleLookupTable();
+    
+  //   color = (color+1) % 3;
+  //   switch (color) {
+  //     case 0:
+  //       generateLookupTable();
+  //       break;
+  //     case 1:
+  //       generateLookupTableAguayo();
+  //       break;
+  //     case 2:
+  //       generateLookupTableRandom();
+  //       break;
+  //   }
   }
 
   if (millis() > lastChange + periodFormula) {
@@ -216,19 +226,13 @@ void loop() {
     colorIndex++;
   }
 
-  // for (int x = 0; x < NUM_STRIPS; x++) {
-  //   if (bb >> x & 1) {
-  //     temp[x] = pickColor(colorIndex + x);
-  //   } else {
-  //     temp[x] = CRGB(0, 0, 0);
-  //   }
-  // }
-
   for (int x = 0; x < NUM_STRIPS; x++) {
-    temp[x] = CRGB(0,0,0);    
-    if(!counter) temp[x] = CRGB(127, 127, 127);    
+    if (bb >> x & 1) {
+      temp[x] = pickColor(colorIndex + x);
+    } else {
+      temp[x] = CRGB(0, 0, 0);
+    }
   }
-
   pushValueToFifo(temp);
   FastLED.show();
   t++;

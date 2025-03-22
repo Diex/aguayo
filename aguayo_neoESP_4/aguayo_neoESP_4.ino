@@ -116,23 +116,23 @@ void shuffleLookupTable() {
 // For mirroring strips, all the "special" stuff happens just in setup.  We
 // just addLeds multiple times, once for each strip
 void setup() {
-  // FastLED.addLeds<NEOPIXEL, 19>(leds[0], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, 21>(leds[1], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, 18>(leds[2], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, 0>(leds[3], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, 5>(leds[4], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, 4>(leds[5], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, 17>(leds[6], NUM_LEDS_PER_STRIP);
-  // FastLED.addLeds<NEOPIXEL, 16>(leds[7], NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, 19>(leds[0], NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, 21>(leds[1], NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, 18>(leds[2], NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, 0>(leds[3], NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, 5>(leds[4], NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, 4>(leds[5], NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, 17>(leds[6], NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, 16>(leds[7], NUM_LEDS_PER_STRIP);
 
-  FastLED.addLeds<NEOPIXEL, D0>(leds[0], NUM_LEDS_PER_STRIP);
-  FastLED.addLeds<NEOPIXEL, D1>(leds[1], NUM_LEDS_PER_STRIP);
-  FastLED.addLeds<NEOPIXEL, D2>(leds[2], NUM_LEDS_PER_STRIP);
-  FastLED.addLeds<NEOPIXEL, D3>(leds[3], NUM_LEDS_PER_STRIP);
-  FastLED.addLeds<NEOPIXEL, D4>(leds[4], NUM_LEDS_PER_STRIP);
-  FastLED.addLeds<NEOPIXEL, D5>(leds[5], NUM_LEDS_PER_STRIP);
-  FastLED.addLeds<NEOPIXEL, D6>(leds[5], NUM_LEDS_PER_STRIP);
-  FastLED.addLeds<NEOPIXEL, D7>(leds[5], NUM_LEDS_PER_STRIP);
+  // FastLED.addLeds<NEOPIXEL, D0>(leds[0], NUM_LEDS_PER_STRIP);
+  // FastLED.addLeds<NEOPIXEL, D1>(leds[1], NUM_LEDS_PER_STRIP);
+  // FastLED.addLeds<NEOPIXEL, D2>(leds[2], NUM_LEDS_PER_STRIP);
+  // FastLED.addLeds<NEOPIXEL, D3>(leds[3], NUM_LEDS_PER_STRIP);
+  // FastLED.addLeds<NEOPIXEL, D4>(leds[4], NUM_LEDS_PER_STRIP);
+  // FastLED.addLeds<NEOPIXEL, D5>(leds[5], NUM_LEDS_PER_STRIP);
+  // FastLED.addLeds<NEOPIXEL, D6>(leds[5], NUM_LEDS_PER_STRIP);
+  // FastLED.addLeds<NEOPIXEL, D7>(leds[5], NUM_LEDS_PER_STRIP);
 
   // long temp = getRandomSeed(31);
 
@@ -250,61 +250,6 @@ void pushValueToFifo(CRGB value[]) {
   for (int i = 0; i < NUM_STRIPS; i++) {
     leds[i][0] = value[i];
   }
-}
-
-long getRandomSeed(int numBits)
-{
-  // magic numbers tested 2016-03-28
-  // try to speed it up
-  // Works Well. Keep!
-  //
-  if (numBits > 31 or numBits <1) numBits = 31; // limit input range
- 
-  const int baseIntervalMs = 1UL; // minumum wait time
-  const byte sampleSignificant = 7;  // modulus of the input sample
-  const byte sampleMultiplier = 10;   // ms per sample digit difference
-
-  const byte hashIterations = 3;
-  int intervalMs = 0;
-
-  unsigned long reading;
-  long result = 0;
-  int tempBit = 0;
-
-  Serial.print("randomizing...");
-  pinMode(analogPort, INPUT_PULLUP);
-  pinMode(analogPort, INPUT);
-  delay(1);
-  // Now there will be a slow decay of the voltage,
-  // about 8 seconds
-  // so pick a point on the curve
-  // offset by the processed previous sample:
-  //
-
-  for (int bits = 0; bits < numBits; bits++)
-  {
-      Serial.print('*');
-
-    for (int i = 0; i < hashIterations; i++)
-    {
-//      Serial.print(' ');
-//      Serial.print( hashIterations - i );
-      delay(baseIntervalMs + intervalMs);
-
-      // take a sample
-      reading = analogRead(analogPort);
-      tempBit ^= reading & 1;
-
-      // take the low "digits" of the reading
-      // and multiply it to scale it to
-      // map a new point on the decay curve:
-      intervalMs = (reading % sampleSignificant) * sampleMultiplier;
-    }
-    result |= (long)(tempBit & 1) << bits;
-  }
-  Serial.println(result);
-//  Serial.println();
-  return result;
 }
 
 
